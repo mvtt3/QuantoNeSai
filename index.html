@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Interattivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .timer {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #ff0000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 1s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .dark-mode {
+            background-color: #222;
+            color: #f0f0f0;
+        }
+
+        .dark-mode .container {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz Interattivo</h1>
+        <div id="auth-screen">
+            <button id="google-sign-in">Accedi con Google</button>
+        </div>
+        <div id="start-screen" class="hidden">
+            <input type="text" id="username" placeholder="Inserisci il tuo nome">
+            <button id="start-button">Inizia Quiz</button>
+        </div>
+        <div id="quiz-screen" class="hidden">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
+        </div>
+        <div id="end-screen" class="hidden">
+            <h2>Quiz Completato!</h2>
+            <p id="score">Punteggio: <span id="score-value">0</span></p>
+            <p id="time-taken">Tempo impiegato: <span id="time-taken-value">0</span>s</p>
+            <p id="message"></p>
+            <button id="restart-button">Ricomincia Quiz</button>
+            <button id="reset-leaderboard-button">Resetta Classifica</button>
+        </div>
+        <div id="leaderboard">
+            <h2>Classifica</h2>
+            <ul id="leaderboard-list"></ul>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script>
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdZbRpxIZZiUY4GgRrCza5ejxtFiDVyAc",
+            authDomain: "quiz-33f1c.firebaseapp.com",
+            projectId: "quiz-33f1c",
+            storageBucket: "quiz-33f1c.appspot.com",
+            messagingSenderId: "540883400502",
+            appId: "1:540883400502:web:6944d0ba56f9e0baf5e597",
+            measurementId: "G-05WYSVNRHK"
+        };
+
+        // Inizializza Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Configura il provider di accesso Google
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // Elementi DOM
+        const authScreen = document.getElementById("auth-screen");
+        const startScreen = document.getElementById("start-screen");
+        const quizScreen = document.getElementById("quiz-screen");
+        const endScreen = document.getElementById("end-screen");
+        const googleSignInButton = document.getElementById("google-sign-in");
+        const startButton = document.getElementById("start-button");
+        const restartButton = document.getElementById("restart-button");
+        const resetLeaderboardButton = document.getElementById("reset-leaderboard-button");
+
+        // Domande del quiz
+        const questions = [
+            {
+                question: "Qual è la capitale della Francia?",
+                options: ["Londra", "Parigi", "Berlino", "Madrid"],
+                answer: "Parigi"
+            },
+            {
+                question: "Qual è il fiume più lungo del mondo?",
+                options: ["Nilo", "Amazzonia", "Yangtze", "Mississippi"],
+                answer: "Amazzonia"
+            },
+            {
+                question: "Chi ha scritto 'Romeo e Giulietta'?",
+                options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+                answer: "William Shakespeare"
+            },
+            {
+                question: "Qual è il pianeta più grande del sistema solare?",
+                options: ["Terra", "Marte", "Giove", "Saturno"],
+                answer: "Giove"
+            },
+            {
+                question: "Qual è l'elemento chimico con simbolo 'O'?",
+                options: ["Oro", "Osmio", "Ossigeno", "Ottanio"],
+                answer: "Ossigeno"
+            }
+        ];
+
+        // Variabili globali
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeLeft = 15;
+        let timer;
+        let startTime;
+        let endTime;
+        let username = "";
+
+        // Funzione per gestire l'accesso con Google
+        googleSignInButton.addEventListener("click", () => {
+            auth.signInWithPopup(googleProvider)
+                .then((result) => {
+                    console.log("Accesso effettuato con successo", result.user);
+                    authScreen.classList.add("hidden");
+                    startScreen.classList.remove("hidden");
+                })
+                .catch((error) => {
+                    console.error("Errore durante l'accesso", error);
+                });
+        });
+
+        // Funzione per avviare il quiz
+        startButton.addEventListener("click", () => {
+            username = document.getElementById("username").value.trim();
+            if (username === "") {
+                alert("Inserisci il tuo nome!");
+                return;
+            }
+            startScreen.classList.add("hidden");
+            quizScreen.classList.remove("hidden");
+            startQuiz();
+        });
+
+        // Funzione per ricominciare il quiz
+        restartButton.addEventListener("click", () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            endScreen.classList.add("hidden");
+            quizScreen.classList.remove("hidden");
+            startQuiz();
+        });
+
+        // Funzione per resettare la classifica
+        resetLeaderboardButton.addEventListener("click", () => {
+            if (confirm("Sei sicuro di voler resettare la classifica?")) {
+                resetLeaderboard();
+            }
+        });
+
+        // Funzione per avviare il quiz
+        function startQuiz() {
+            score = 0;
+            startTime = new Date();
+            loadQuestion();
+        }
+
+        // Funzione per caricare una domanda
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById("question").textContent = question.question;
+            const optionsElement = document.getElementById("options");
+            optionsElement.innerHTML = "";
+            question.options.forEach(option => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.addEventListener("click", () => selectOption(option));
+                optionsElement.appendChild(button);
+            });
+            startTimer();
+            quizScreen.classList.add("fade-in");
+        }
+
+        // Funzione per selezionare un'opzione
+        function selectOption(selectedOption) {
+            clearInterval(timer);
+            const question = questions[currentQuestionIndex];
+            if (selectedOption === question.answer) {
+                score++;
+            }
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                setTimeout(() => {
+                    quizScreen.classList.remove("fade-in");
+                    void quizScreen.offsetWidth; // Trigger reflow
+                    loadQuestion();
+                }, 1000);
+            } else {
+                endQuiz();
+            }
+        }
+
+        // Funzione per avviare il timer
+        function startTimer() {
+            timeLeft = 15;
+            document.getElementById("time").textContent = timeLeft;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("time").textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < questions.length) {
+                        setTimeout(() => {
+                            quizScreen.classList.remove("fade-in");
+                            void quizScreen.offsetWidth; // Trigger reflow
+                            loadQuestion();
+                        }, 1000);
+                    } else {
+                        endQuiz();
+                    }
+                }
+            }, 1000);
+        }
+
+        // Funzione per terminare il quiz
+        function endQuiz() {
+            endTime = new Date();
+            const timeTaken = Math.floor((endTime - startTime) / 1000);
+            quizScreen.classList.add("hidden");
+            endScreen.classList.remove("hidden");
+            document.getElementById("score-value").textContent = score;
+            document.getElementById("time-taken-value").textContent = timeTaken;
+            document.getElementById("message").textContent = getResultMessage(score);
+            saveScore(username, score, new Date());
+            loadLeaderboard();
+        }
+
+        // Funzione per ottenere il messaggio di risultato
+        function getResultMessage(score) {
+            if (score === questions.length) {
+                return "Complimenti! Hai risposto correttamente a tutte le domande!";
+            } else if (score >= questions.length / 2) {
+                return "Bravo! Hai risposto correttamente a più della metà delle domande!";
+            } else {
+                return "Puoi fare meglio! Prova di nuovo!";
+            }
+        }
+
+        // Funzione per salvare il punteggio su Firebase
+        function saveScore(username, score, date) {
+            db.collection("scores").add({
+                username: username,
+                score: score,
+                date: date
+            });
+        }
+
+        // Funzione per caricare la classifica
+        function loadLeaderboard() {
+            db.collection("scores").orderBy("score", "desc").limit(10).get().then((querySnapshot) => {
+                const leaderboardList = document.getElementById("leaderboard-list");
+                leaderboardList.innerHTML = "";
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement("li");
+                    li.textContent = `${data.username}: ${data.score} (${data.date.toDate().toLocaleDateString()})`;
+                    leaderboardList.appendChild(li);
+                });
+            });
+        }
+
+        // Funzione per resettare la classifica
+        function resetLeaderboard() {
+            db.collection("scores").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    doc.ref.delete();
+                });
+            });
+            document.getElementById("leaderboard-list").innerHTML = "";
+        }
+
+        // Carica la classifica all'avvio
+        loadLeaderboard();
+    </script>
+</body>
+</html>
