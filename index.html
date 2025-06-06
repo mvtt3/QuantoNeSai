@@ -689,14 +689,18 @@
 
         // Carica classifica
         async function loadLeaderboard() {
+            const leaderboardList = document.getElementById("leaderboard-list");
+            
             try {
+                console.log("Caricamento classifica...");
+                
+                // Prima prova con una query più semplice
                 const snapshot = await db.collection("scores")
                     .orderBy("score", "desc")
-                    .orderBy("timeTaken", "asc")
                     .limit(10)
                     .get();
 
-                const leaderboardList = document.getElementById("leaderboard-list");
+                console.log("Query eseguita, documenti trovati:", snapshot.size);
                 leaderboardList.innerHTML = "";
 
                 if (snapshot.empty) {
@@ -704,16 +708,63 @@
                     return;
                 }
 
-                snapshot.forEach((doc, index) => {
-                    const data = doc.data();
+                // Ordina manualmente per timeTaken come secondo criterio
+                const scores = [];
+                snapshot.forEach((doc) => {
+                    scores.push({
+                        ...doc.data(),
+                        id: doc.id
+                    });
+                });
+
+                // Ordina per punteggio (desc) e poi per tempo (asc)
+                scores.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    return a.timeTaken - b.timeTaken;
+                });
+
+                scores.forEach((data, index) => {
                     const li = document.createElement("li");
                     const medal = index < 3 ? ["🥇", "🥈", "🥉"][index] : `${index + 1}.`;
                     li.textContent = `${medal} ${data.nickname}: ${data.score}/${questions.length} punti (${data.timeTaken}s)`;
                     leaderboardList.appendChild(li);
                 });
+
+                console.log("Classifica caricata con successo");
             } catch (error) {
-                console.error("Errore nel caricamento della classifica:", error);
-                document.getElementById("leaderboard-list").innerHTML = "<li>Errore nel caricamento della classifica</li>";
+                console.error("Errore dettagliato nel caricamento della classifica:", error);
+                leaderboardList.innerHTML = `<li>Errore nel caricamento: ${error.message}</li>`;
+                
+                // Prova con una query ancora più semplice se la prima fallisce
+                try {
+                    console.log("Tentativo con query semplificata...");
+                    const simpleSnapshot = await db.collection("scores").limit(10).get();
+                    
+                    if (!simpleSnapshot.empty) {
+                        leaderboardList.innerHTML = "";
+                        const simpleScores = [];
+                        
+                        simpleSnapshot.forEach((doc) => {
+                            simpleScores.push(doc.data());
+                        });
+                        
+                        simpleScores.sort((a, b) => b.score - a.score);
+                        
+                        simpleScores.forEach((data, index) => {
+                            const li = document.createElement("li");
+                            const medal = index < 3 ? ["🥇", "🥈", "🥉"][index] : `${index + 1}.`;
+                            li.textContent = `${medal} ${data.nickname}: ${data.score}/${questions.length} punti (${data.timeTaken}s)`;
+                            leaderboardList.appendChild(li);
+                        });
+                        
+                        console.log("Classifica caricata con query semplificata");
+                    }
+                } catch (simpleError) {
+                    console.error("Errore anche con query semplificata:", simpleError);
+                    leaderboardList.innerHTML = "<li>Impossibile caricare la classifica. Controlla le regole di Firestore.</li>";
+                }
             }
         }
 
