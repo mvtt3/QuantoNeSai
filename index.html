@@ -162,7 +162,7 @@
             <h2>Registrazione</h2>
             <div class="nickname-setup">
                 <input type="text" id="register-nickname" placeholder="Scegli il tuo nickname">
-                <div class="warning-text"⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
+                <div class="warning-text">⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
                 <button id="google-register">Registrati con Google</button>
                 <button id="back-to-auth" class="secondary">Indietro</button>
             </div>
@@ -360,40 +360,98 @@
             }
 
             try {
-                // Controlla se il nickname è già utilizzato
-                const nicknameQuery = await db.collection("users").where("nickname", "==", nickname).get();
-                if (!nicknameQuery.empty) {
-                    alert("Questo nickname è già utilizzato. Scegline un altro.");
+                console.log("Inizio registrazione con nickname:", nickname);
+
+                // Accedi prima con Google
+                console.log("Avvio login Google...");
+                const result = await auth.signInWithPopup(googleProvider);
+                const user = result.user;
+                console.log("Login Google completato per:", user.email);
+
+                // Controlla se l'utente esiste già
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                if (userDoc.exists) {
+                    alert("Questo account Google è già registrato. Usa 'Accedi' invece.");
+                    await auth.signOut();
                     return;
                 }
 
-                // Accedi con Google
-                const result = await auth.signInWithPopup(googleProvider);
-                const user = result.user;
+                // Controlla se il nickname è già utilizzato (ora che siamo autenticati)
+                console.log("Controllo nickname duplicato...");
+                const nicknameQuery = await db.collection("users").where("nickname", "==", nickname).get();
+                if (!nicknameQuery.empty) {
+                    alert("Questo nickname è già utilizzato. Scegline un altro.");
+                    await auth.signOut();
+                    return;
+                }
+                console.log("Nickname disponibile");
 
                 // Salva il profilo utente
+                console.log("Salvataggio profilo utente...");
                 await db.collection("users").doc(user.uid).set({
                     nickname: nickname,
                     email: user.email,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+                console.log("Profilo utente salvato con successo");
 
                 userNickname = nickname;
                 showStartScreen();
             } catch (error) {
-                console.error("Errore durante la registrazione:", error);
-                alert("Errore durante la registrazione. Riprova.");
+                console.error("ERRORE DETTAGLIATO durante la registrazione:", {
+                    code: error.code,
+                    message: error.message,
+                    details: error
+                });
+                
+                let errorMessage = "Errore durante la registrazione: ";
+                if (error.code === 'auth/popup-closed-by-user') {
+                    errorMessage = "Registrazione annullata dall'utente.";
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMessage = "Popup bloccato dal browser. Permetti i popup per questo sito.";
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    errorMessage = "Richiesta popup annullata.";
+                } else {
+                    errorMessage += error.message || "Errore sconosciuto";
+                }
+                
+                alert(errorMessage);
+                
+                // Se c'è un errore, fai logout per sicurezza
+                try {
+                    await auth.signOut();
+                } catch (logoutError) {
+                    console.error("Errore durante il logout:", logoutError);
+                }
             }
         }
 
         // Gestione accesso
         async function handleLogin() {
             try {
+                console.log("Avvio login Google...");
                 const result = await auth.signInWithPopup(googleProvider);
+                console.log("Login Google completato per:", result.user.email);
                 // checkUserProfile verrà chiamato automaticamente da onAuthStateChanged
             } catch (error) {
-                console.error("Errore durante l'accesso:", error);
-                alert("Errore durante l'accesso. Riprova.");
+                console.error("ERRORE DETTAGLIATO durante l'accesso:", {
+                    code: error.code,
+                    message: error.message,
+                    details: error
+                });
+                
+                let errorMessage = "Errore durante l'accesso: ";
+                if (error.code === 'auth/popup-closed-by-user') {
+                    errorMessage = "Accesso annullato dall'utente.";
+                } else if (error.code === 'auth/popup-blocked') {
+                    errorMessage = "Popup bloccato dal browser. Permetti i popup per questo sito.";
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    errorMessage = "Richiesta popup annullata.";
+                } else {
+                    errorMessage += error.message || "Errore sconosciuto";
+                }
+                
+                alert(errorMessage);
             }
         }
 
