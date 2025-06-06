@@ -147,6 +147,8 @@
     </style>
 </head>
 <body>
+
+<button onclick="selectAccount()" style="position: absolute; top: 10px; right: 120px; padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">Seleziona Account</button>
 <button onclick="logout()" style="position: absolute; top: 10px; right: 10px; padding: 10px; background-color: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
 
 <div class="container">
@@ -699,5 +701,40 @@ function logout() {
 
 // Display questions when the page loads
 window.onload = displayQuestions;
+" type="text/javascript"></script><script string="
+// Sample leaderboard data
+const leaderboardData = [
+    { name: &quot;Giocatore 1&quot;, score: 100 },
+    { name: &quot;Giocatore 2&quot;, score: 95 },
+    { name: &quot;Giocatore 3&quot;, score: 90 }
+];
+
+// Function to display leaderboard
+function displayLeaderboard() {
+    const container = document.querySelector('.container');
+    const leaderboardElement = document.createElement('div');
+    leaderboardElement.className = 'leaderboard';
+    leaderboardElement.innerHTML = '&lt;h2&gt;Classifica&lt;/h2&gt;';
+
+    leaderboardData.forEach(player =&gt; {
+        leaderboardElement.innerHTML += `&lt;p&gt;${player.name}: ${player.score}&lt;/p&gt;`;
+    });
+
+    container.appendChild(leaderboardElement);
+}
+
+// Function to handle account selection
+function selectAccount() {
+    // Logic to select a different account
+    alert('Seleziona un altro account');
+    // Example: Redirect to account selection page or show a modal to select another account
+    // window.location.href = 'select_account.html';
+}
+
+// Display leaderboard when the page loads
+window.onload = function() {
+    displayQuestions();
+    displayLeaderboard();
+};
 " type="text/javascript"></script></body>
 </html>
