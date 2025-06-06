@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Interattivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.secondary:hover {
+            background-color: #545b62;
+        }
+
+        .timer {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #ff0000;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .fade-in {
+            animation: fadeIn 1s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .dark-mode {
+            background-color: #222;
+            color: #f0f0f0;
+        }
+
+        .dark-mode .container {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nickname-setup {
+            margin: 20px 0;
+        }
+
+        .nickname-setup input {
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        .warning-text {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+
+        #user-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .leaderboard {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .leaderboard ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .leaderboard li {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007BFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Quiz Interattivo</h1>
+        
+        <!-- Schermata di autenticazione -->
+        <div id="auth-screen">
+            <div class="auth-buttons">
+                <button id="register-button">Registrati</button>
+                <button id="login-button" class="secondary">Accedi</button>
+            </div>
+        </div>
+
+        <!-- Schermata di registrazione -->
+        <div id="register-screen" class="hidden">
+            <h2>Registrazione</h2>
+            <div class="nickname-setup">
+                <input type="text" id="register-nickname" placeholder="Scegli il tuo nickname">
+                <div class="warning-text"⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
+                <button id="google-register">Registrati con Google</button>
+                <button id="back-to-auth" class="secondary">Indietro</button>
+            </div>
+        </div>
+
+        <!-- Schermata di accesso -->
+        <div id="login-screen" class="hidden">
+            <h2>Accedi</h2>
+            <button id="google-login">Accedi con Google</button>
+            <button id="back-to-auth-login" class="secondary">Indietro</button>
+        </div>
+
+        <!-- Schermata principale del quiz -->
+        <div id="start-screen" class="hidden">
+            <div id="user-info"></div>
+            <button id="start-button">Inizia Quiz</button>
+            <button id="logout-button" class="secondary">Logout</button>
+        </div>
+
+        <!-- Schermata del quiz -->
+        <div id="quiz-screen" class="hidden">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
+        </div>
+
+        <!-- Schermata finale -->
+        <div id="end-screen" class="hidden">
+            <h2>Quiz Completato!</h2>
+            <p id="score">Punteggio: <span id="score-value">0</span></p>
+            <p id="time-taken">Tempo impiegato: <span id="time-taken-value">0</span>s</p>
+            <p id="message"></p>
+            <button id="restart-button">Ricomincia Quiz</button>
+            <button id="back-to-start">Torna al Menu</button>
+        </div>
+
+        <!-- Classifica -->
+        <div id="leaderboard" class="leaderboard hidden">
+            <h2>🏆 Classifica Globale</h2>
+            <ul id="leaderboard-list"></ul>
+            <button id="reset-leaderboard-button" class="secondary">Resetta Classifica (Admin)</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script>
+        // Configurazione Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdZbRpxIZZiUY4GgRrCza5ejxtFiDVyAc",
+            authDomain: "quiz-33f1c.firebaseapp.com",
+            projectId: "quiz-33f1c",
+            storageBucket: "quiz-33f1c.appspot.com",
+            messagingSenderId: "540883400502",
+            appId: "1:540883400502:web:6944d0ba56f9e0baf5e597",
+            measurementId: "G-05WYSVNRHK"
+        };
+
+        // Inizializza Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Configura il provider di accesso Google
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        // Elementi DOM
+        const authScreen = document.getElementById("auth-screen");
+        const registerScreen = document.getElementById("register-screen");
+        const loginScreen = document.getElementById("login-screen");
+        const startScreen = document.getElementById("start-screen");
+        const quizScreen = document.getElementById("quiz-screen");
+        const endScreen = document.getElementById("end-screen");
+        const leaderboard = document.getElementById("leaderboard");
+
+        // Bottoni
+        const registerButton = document.getElementById("register-button");
+        const loginButton = document.getElementById("login-button");
+        const googleRegisterButton = document.getElementById("google-register");
+        const googleLoginButton = document.getElementById("google-login");
+        const backToAuthButton = document.getElementById("back-to-auth");
+        const backToAuthLoginButton = document.getElementById("back-to-auth-login");
+        const startQuizButton = document.getElementById("start-button");
+        const restartButton = document.getElementById("restart-button");
+        const backToStartButton = document.getElementById("back-to-start");
+        const logoutButton = document.getElementById("logout-button");
+        const resetLeaderboardButton = document.getElementById("reset-leaderboard-button");
+
+        // Domande del quiz
+        const questions = [
+            {
+                question: "Qual è la capitale della Francia?",
+                options: ["Londra", "Parigi", "Berlino", "Madrid"],
+                answer: "Parigi"
+            },
+            {
+                question: "Qual è il fiume più lungo del mondo?",
+                options: ["Nilo", "Amazzonia", "Yangtze", "Mississippi"],
+                answer: "Amazzonia"
+            },
+            {
+                question: "Chi ha scritto 'Romeo e Giulietta'?",
+                options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+                answer: "William Shakespeare"
+            },
+            {
+                question: "Qual è il pianeta più grande del sistema solare?",
+                options: ["Terra", "Marte", "Giove", "Saturno"],
+                answer: "Giove"
+            },
+            {
+                question: "Qual è l'elemento chimico con simbolo 'O'?",
+                options: ["Oro", "Osmio", "Ossigeno", "Ottanio"],
+                answer: "Ossigeno"
+            }
+        ];
+
+        // Variabili globali
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timeLeft = 15;
+        let timer;
+        let startTime;
+        let endTime;
+        let currentUser = null;
+        let userNickname = "";
+
+        // Event listeners
+        registerButton.addEventListener("click", showRegisterScreen);
+        loginButton.addEventListener("click", showLoginScreen);
+        backToAuthButton.addEventListener("click", showAuthScreen);
+        backToAuthLoginButton.addEventListener("click", showAuthScreen);
+        googleRegisterButton.addEventListener("click", handleRegister);
+        googleLoginButton.addEventListener("click", handleLogin);
+        startQuizButton.addEventListener("click", startQuiz);
+        restartButton.addEventListener("click", restartQuiz);
+        backToStartButton.addEventListener("click", showStartScreen);
+        logoutButton.addEventListener("click", handleLogout);
+        resetLeaderboardButton.addEventListener("click", resetLeaderboard);
+
+        // Monitora lo stato di autenticazione
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                checkUserProfile();
+            } else {
+                currentUser = null;
+                showAuthScreen();
+            }
+        });
+
+        // Funzioni di navigazione
+        function showAuthScreen() {
+            hideAllScreens();
+            authScreen.classList.remove("hidden");
+        }
+
+        function showRegisterScreen() {
+            hideAllScreens();
+            registerScreen.classList.remove("hidden");
+        }
+
+        function showLoginScreen() {
+            hideAllScreens();
+            loginScreen.classList.remove("hidden");
+        }
+
+        function showStartScreen() {
+            hideAllScreens();
+            startScreen.classList.remove("hidden");
+            leaderboard.classList.remove("hidden");
+            loadLeaderboard();
+            updateUserInfo();
+        }
+
+        function hideAllScreens() {
+            authScreen.classList.add("hidden");
+            registerScreen.classList.add("hidden");
+            loginScreen.classList.add("hidden");
+            startScreen.classList.add("hidden");
+            quizScreen.classList.add("hidden");
+            endScreen.classList.add("hidden");
+            leaderboard.classList.add("hidden");
+        }
+
+        // Gestione registrazione
+        async function handleRegister() {
+            const nickname = document.getElementById("register-nickname").value.trim();
+            if (!nickname) {
+                alert("Inserisci un nickname!");
+                return;
+            }
+
+            try {
+                // Controlla se il nickname è già utilizzato
+                const nicknameQuery = await db.collection("users").where("nickname", "==", nickname).get();
+                if (!nicknameQuery.empty) {
+                    alert("Questo nickname è già utilizzato. Scegline un altro.");
+                    return;
+                }
+
+                // Accedi con Google
+                const result = await auth.signInWithPopup(googleProvider);
+                const user = result.user;
+
+                // Salva il profilo utente
+                await db.collection("users").doc(user.uid).set({
+                    nickname: nickname,
+                    email: user.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                userNickname = nickname;
+                showStartScreen();
+            } catch (error) {
+                console.error("Errore durante la registrazione:", error);
+                alert("Errore durante la registrazione. Riprova.");
+            }
+        }
+
+        // Gestione accesso
+        async function handleLogin() {
+            try {
+                const result = await auth.signInWithPopup(googleProvider);
+                // checkUserProfile verrà chiamato automaticamente da onAuthStateChanged
+            } catch (error) {
+                console.error("Errore durante l'accesso:", error);
+                alert("Errore durante l'accesso. Riprova.");
+            }
+        }
+
+        // Controlla il profilo utente
+        async function checkUserProfile() {
+            try {
+                const userDoc = await db.collection("users").doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    userNickname = userDoc.data().nickname;
+                    showStartScreen();
+                } else {
+                    alert("Account non trovato. Effettua prima la registrazione.");
+                    handleLogout();
+                }
+            } catch (error) {
+                console.error("Errore nel controllo del profilo:", error);
+                alert("Errore nel caricamento del profilo.");
+                handleLogout();
+            }
+        }
+
+        // Logout
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+                userNickname = "";
+                showAuthScreen();
+            } catch (error) {
+                console.error("Errore durante il logout:", error);
+            }
+        }
+
+        // Aggiorna info utente
+        function updateUserInfo() {
+            const userInfo = document.getElementById("user-info");
+            userInfo.innerHTML = `Benvenuto, <strong>${userNickname}</strong>!`;
+        }
+
+        // Funzioni del quiz
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            startTime = new Date();
+            hideAllScreens();
+            quizScreen.classList.remove("hidden");
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = questions[currentQuestionIndex];
+            document.getElementById("question").textContent = `Domanda ${currentQuestionIndex + 1}/${questions.length}: ${question.question}`;
+            const optionsElement = document.getElementById("options");
+            optionsElement.innerHTML = "";
+            
+            question.options.forEach(option => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.addEventListener("click", () => selectOption(option));
+                optionsElement.appendChild(button);
+            });
+            
+            startTimer();
+            quizScreen.classList.add("fade-in");
+        }
+
+        function selectOption(selectedOption) {
+            clearInterval(timer);
+            const question = questions[currentQuestionIndex];
+            if (selectedOption === question.answer) {
+                score++;
+            }
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                setTimeout(() => {
+                    quizScreen.classList.remove("fade-in");
+                    void quizScreen.offsetWidth; // Trigger reflow
+                    loadQuestion();
+                }, 1000);
+            } else {
+                endQuiz();
+            }
+        }
+
+        function startTimer() {
+            timeLeft = 15;
+            document.getElementById("time").textContent = timeLeft;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("time").textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    nextQuestion();
+                }
+            }, 1000);
+        }
+
+        function endQuiz() {
+            endTime = new Date();
+            const timeTaken = Math.floor((endTime - startTime) / 1000);
+            
+            hideAllScreens();
+            endScreen.classList.remove("hidden");
+            
+            document.getElementById("score-value").textContent = score;
+            document.getElementById("time-taken-value").textContent = timeTaken;
+            document.getElementById("message").textContent = getResultMessage(score);
+            
+            saveScore(userNickname, score, timeTaken);
+        }
+
+        function restartQuiz() {
+            startQuiz();
+        }
+
+        function getResultMessage(score) {
+            if (score === questions.length) {
+                return "🎉 Perfetto! Hai risposto correttamente a tutte le domande!";
+            } else if (score >= questions.length / 2) {
+                return "👏 Bravo! Hai superato la metà delle domande!";
+            } else {
+                return "💪 Puoi fare meglio! Prova di nuovo!";
+            }
+        }
+
+        // Salva punteggio
+        async function saveScore(nickname, score, timeTaken) {
+            try {
+                await db.collection("scores").add({
+                    userId: currentUser.uid,
+                    nickname: nickname,
+                    score: score,
+                    timeTaken: timeTaken,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                console.log("Punteggio salvato con successo");
+            } catch (error) {
+                console.error("Errore nel salvare il punteggio:", error);
+            }
+        }
+
+        // Carica classifica
+        async function loadLeaderboard() {
+            try {
+                const snapshot = await db.collection("scores")
+                    .orderBy("score", "desc")
+                    .orderBy("timeTaken", "asc")
+                    .limit(10)
+                    .get();
+
+                const leaderboardList = document.getElementById("leaderboard-list");
+                leaderboardList.innerHTML = "";
+
+                if (snapshot.empty) {
+                    leaderboardList.innerHTML = "<li>Nessun punteggio ancora registrato</li>";
+                    return;
+                }
+
+                snapshot.forEach((doc, index) => {
+                    const data = doc.data();
+                    const li = document.createElement("li");
+                    const medal = index < 3 ? ["🥇", "🥈", "🥉"][index] : `${index + 1}.`;
+                    li.textContent = `${medal} ${data.nickname}: ${data.score}/${questions.length} punti (${data.timeTaken}s)`;
+                    leaderboardList.appendChild(li);
+                });
+            } catch (error) {
+                console.error("Errore nel caricamento della classifica:", error);
+                document.getElementById("leaderboard-list").innerHTML = "<li>Errore nel caricamento della classifica</li>";
+            }
+        }
+
+        // Resetta classifica (solo per admin)
+        async function resetLeaderboard() {
+            if (!confirm("Sei sicuro di voler resettare la classifica? Questa azione non può essere annullata.")) {
+                return;
+            }
+
+            try {
+                const snapshot = await db.collection("scores").get();
+                const batch = db.batch();
+                
+                snapshot.docs.forEach((doc) => {
+                    batch.delete(doc.ref);
+                });
+                
+                await batch.commit();
+                loadLeaderboard();
+                alert("Classifica resettata con successo!");
+            } catch (error) {
+                console.error("Errore nel reset della classifica:", error);
+                alert("Errore nel reset della classifica.");
+            }
+        }
+
+        // Carica la classifica all'avvio se l'utente è autenticato
+        auth.onAuthStateChanged((user) => {
+            if (user && !authScreen.classList.contains("hidden")) {
+                loadLeaderboard();
+            }
+        });
+    </script>
+</body>
+</html>
