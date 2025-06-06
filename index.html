@@ -147,10 +147,6 @@
     </style>
 </head>
 <body>
-
-<button onclick="selectAccount()" style="position: absolute; top: 10px; right: 120px; padding: 10px; background-color: #007BFF; color: white; border: none; border-radius: 5px; cursor: pointer;">Seleziona Account</button>
-<button onclick="logout()" style="position: absolute; top: 10px; right: 10px; padding: 10px; background-color: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
-
 <div class="container">
 <h1>Quiz Interattivo</h1>
 <!-- Schermata di autenticazione -->
@@ -653,55 +649,6 @@
         });
     </script>
 <script string="
-// Sample quiz questions
-const quizQuestions = [
-    {
-        question: &quot;Qual è la capitale della Francia?&quot;,
-        options: [&quot;Londra&quot;, &quot;Berlino&quot;, &quot;Parigi&quot;, &quot;Madrid&quot;],
-        answer: &quot;Parigi&quot;
-    },
-    {
-        question: &quot;Qual è il fiume più lungo del mondo?&quot;,
-        options: [&quot;Nilo&quot;, &quot;Amazzonia&quot;, &quot;Yangtze&quot;, &quot;Mississippi&quot;],
-        answer: &quot;Amazzonia&quot;
-    },
-    {
-        question: &quot;Qual è il pianeta più grande del sistema solare?&quot;,
-        options: [&quot;Terra&quot;, &quot;Giove&quot;, &quot;Marte&quot;, &quot;Saturno&quot;],
-        answer: &quot;Giove&quot;
-    }
-];
-
-// Function to display quiz questions
-function displayQuestions() {
-    const container = document.querySelector('.container');
-    quizQuestions.forEach((q, index) =&gt; {
-        const questionElement = document.createElement('div');
-        questionElement.className = 'question';
-        questionElement.innerHTML = `&lt;h3&gt;${q.question}&lt;/h3&gt;`;
-
-        const optionsElement = document.createElement('div');
-        optionsElement.className = 'options';
-        q.options.forEach(option =&gt; {
-            optionsElement.innerHTML += `&lt;label&gt;&lt;input type=&quot;radio&quot; name=&quot;question${index}&quot; value=&quot;${option}&quot;&gt; ${option}&lt;/label&gt;&lt;br&gt;`;
-        });
-
-        container.appendChild(questionElement);
-        container.appendChild(optionsElement);
-    });
-}
-
-// Function to handle logout
-function logout() {
-    alert('Logout effettuato');
-    // Redirect to logout page or perform logout action
-    // For example, redirect to a logout page:
-    // window.location.href = 'logout.html';
-}
-
-// Display questions when the page loads
-window.onload = displayQuestions;
-" type="text/javascript"></script><script string="
 // Sample leaderboard data
 const leaderboardData = [
     { name: &quot;Giocatore 1&quot;, score: 100 },
@@ -726,12 +673,15 @@ function displayLeaderboard() {
 // Function to handle account selection
 function selectAccount() {
     // Logic to select a different account
-    alert('Seleziona un altro account');
-    // Example: Redirect to account selection page or show a modal to select another account
-    // window.location.href = 'select_account.html';
+    const accountSelected = confirm('Vuoi selezionare un altro account?');
+    if (accountSelected) {
+        // Redirect to account selection page or show a modal to select another account
+        // Example: window.location.href = 'select_account.html';
+        alert('Reindirizzamento alla pagina di selezione account');
+    }
 }
 
-// Display leaderboard when the page loads
+// Display questions and leaderboard when the page loads
 window.onload = function() {
     displayQuestions();
     displayLeaderboard();
