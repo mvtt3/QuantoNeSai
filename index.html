@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="it">
 <head>
 <meta charset="utf-8"/>
@@ -130,6 +129,15 @@
         .leaderboard {
             margin-top: 20px;
             text-align: left;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .leaderboard h2 {
+            text-align: center;
+            margin-top: 0;
         }
 
         .leaderboard ul {
@@ -140,9 +148,45 @@
         .leaderboard li {
             padding: 8px;
             margin: 5px 0;
-            background-color: #f8f9fa;
+            background-color: white;
             border-radius: 5px;
             border-left: 4px solid #007BFF;
+        }
+
+        .account-selector {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+        }
+
+        .account-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .account-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: white;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .account-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
         }
     </style>
 </head>
@@ -156,34 +200,59 @@
 <button class="secondary" id="login-button">Accedi</button>
 </div>
 </div>
+
+<!-- Selettore account -->
+<div class="hidden" id="account-selector">
+<h2>Seleziona Account</h2>
+<div class="account-selector">
+<p>Seleziona un account Google:</p>
+<button id="add-account-button">Aggiungi nuovo account Google</button>
+<div class="account-list" id="account-list"></div>
+<button class="secondary" id="back-from-selector">Indietro</button>
+</div>
+</div>
+
 <!-- Schermata di registrazione -->
 <div class="hidden" id="register-screen">
 <h2>Registrazione</h2>
 <div class="nickname-setup">
 <input id="register-nickname" placeholder="Scegli il tuo nickname" type="text"/>
 <div class="warning-text">⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
-<button id="google-register">Registrati con Google</button>
+<button id="confirm-register">Conferma Registrazione</button>
 <button class="secondary" id="back-to-auth">Indietro</button>
 </div>
 </div>
+
 <!-- Schermata di accesso -->
 <div class="hidden" id="login-screen">
 <h2>Accedi</h2>
 <button id="google-login">Accedi con Google</button>
 <button class="secondary" id="back-to-auth-login">Indietro</button>
 </div>
+
 <!-- Schermata principale del quiz -->
 <div class="hidden" id="start-screen">
 <div id="user-info"></div>
 <button id="start-button">Inizia Quiz</button>
 <button class="secondary" id="logout-button">Logout</button>
+
+<!-- Classifica sempre visibile nella schermata principale -->
+<div class="leaderboard" id="leaderboard">
+<h2>🏆 Classifica Globale</h2>
+<ul id="leaderboard-list">
+<li>Caricamento classifica...</li>
+</ul>
+<button class="secondary" id="reset-leaderboard-button">Resetta Classifica (Admin)</button>
 </div>
+</div>
+
 <!-- Schermata del quiz -->
 <div class="hidden" id="quiz-screen">
 <div class="question" id="question"></div>
 <div class="options" id="options"></div>
 <div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
 </div>
+
 <!-- Schermata finale -->
 <div class="hidden" id="end-screen">
 <h2>Quiz Completato!</h2>
@@ -193,13 +262,8 @@
 <button id="restart-button">Ricomincia Quiz</button>
 <button id="back-to-start">Torna al Menu</button>
 </div>
-<!-- Classifica -->
-<div class="leaderboard hidden" id="leaderboard">
-<h2>🏆 Classifica Globale</h2>
-<ul id="leaderboard-list"></ul>
-<button class="secondary" id="reset-leaderboard-button">Resetta Classifica (Admin)</button>
 </div>
-</div>
+
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -223,9 +287,14 @@
 
         // Configura il provider di accesso Google
         const googleProvider = new firebase.auth.GoogleAuthProvider();
+        // Forza sempre la selezione dell'account
+        googleProvider.setCustomParameters({
+            prompt: 'select_account'
+        });
 
         // Elementi DOM
         const authScreen = document.getElementById("auth-screen");
+        const accountSelector = document.getElementById("account-selector");
         const registerScreen = document.getElementById("register-screen");
         const loginScreen = document.getElementById("login-screen");
         const startScreen = document.getElementById("start-screen");
@@ -236,7 +305,9 @@
         // Bottoni
         const registerButton = document.getElementById("register-button");
         const loginButton = document.getElementById("login-button");
-        const googleRegisterButton = document.getElementById("google-register");
+        const addAccountButton = document.getElementById("add-account-button");
+        const backFromSelectorButton = document.getElementById("back-from-selector");
+        const confirmRegisterButton = document.getElementById("confirm-register");
         const googleLoginButton = document.getElementById("google-login");
         const backToAuthButton = document.getElementById("back-to-auth");
         const backToAuthLoginButton = document.getElementById("back-to-auth-login");
@@ -284,13 +355,17 @@
         let endTime;
         let currentUser = null;
         let userNickname = "";
+        let isRegistering = false;
+        let pendingNickname = "";
 
         // Event listeners
-        registerButton.addEventListener("click", showRegisterScreen);
+        registerButton.addEventListener("click", showAccountSelector);
         loginButton.addEventListener("click", showLoginScreen);
+        addAccountButton.addEventListener("click", handleGoogleAuth);
+        backFromSelectorButton.addEventListener("click", showAuthScreen);
         backToAuthButton.addEventListener("click", showAuthScreen);
         backToAuthLoginButton.addEventListener("click", showAuthScreen);
-        googleRegisterButton.addEventListener("click", handleRegister);
+        confirmRegisterButton.addEventListener("click", confirmRegistration);
         googleLoginButton.addEventListener("click", handleLogin);
         startQuizButton.addEventListener("click", startQuiz);
         restartButton.addEventListener("click", restartQuiz);
@@ -302,10 +377,16 @@
         auth.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
-                checkUserProfile();
+                if (isRegistering) {
+                    handleRegistrationFlow();
+                } else {
+                    checkUserProfile();
+                }
             } else {
                 currentUser = null;
-                showAuthScreen();
+                if (!authScreen.classList.contains("hidden")) {
+                    showAuthScreen();
+                }
             }
         });
 
@@ -313,6 +394,14 @@
         function showAuthScreen() {
             hideAllScreens();
             authScreen.classList.remove("hidden");
+            isRegistering = false;
+            pendingNickname = "";
+        }
+
+        function showAccountSelector() {
+            hideAllScreens();
+            accountSelector.classList.remove("hidden");
+            isRegistering = true;
         }
 
         function showRegisterScreen() {
@@ -328,23 +417,65 @@
         function showStartScreen() {
             hideAllScreens();
             startScreen.classList.remove("hidden");
-            leaderboard.classList.remove("hidden");
             loadLeaderboard();
             updateUserInfo();
         }
 
         function hideAllScreens() {
             authScreen.classList.add("hidden");
+            accountSelector.classList.add("hidden");
             registerScreen.classList.add("hidden");
             loginScreen.classList.add("hidden");
             startScreen.classList.add("hidden");
             quizScreen.classList.add("hidden");
             endScreen.classList.add("hidden");
-            leaderboard.classList.add("hidden");
         }
 
-        // Gestione registrazione
-        async function handleRegister() {
+        // Gestione autenticazione Google
+        async function handleGoogleAuth() {
+            try {
+                console.log("Avvio autenticazione Google...");
+                
+                // Forza il logout per permettere la selezione dell'account
+                if (currentUser) {
+                    await auth.signOut();
+                }
+                
+                const result = await auth.signInWithPopup(googleProvider);
+                console.log("Autenticazione Google completata per:", result.user.email);
+                
+                // Il resto della logica viene gestita da onAuthStateChanged
+            } catch (error) {
+                console.error("ERRORE durante l'autenticazione Google:", error);
+                handleAuthError(error);
+            }
+        }
+
+        // Gestione flusso di registrazione
+        async function handleRegistrationFlow() {
+            try {
+                // Controlla se l'utente esiste già
+                const userDoc = await db.collection("users").doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    alert("Questo account Google è già registrato. Ti reindirizziamo alla pagina di accesso.");
+                    isRegistering = false;
+                    await auth.signOut();
+                    showLoginScreen();
+                    return;
+                }
+                
+                // Mostra la schermata di registrazione
+                showRegisterScreen();
+            } catch (error) {
+                console.error("Errore nel controllo della registrazione:", error);
+                alert("Errore durante la registrazione.");
+                await auth.signOut();
+                showAuthScreen();
+            }
+        }
+
+        // Conferma registrazione
+        async function confirmRegistration() {
             const nickname = document.getElementById("register-nickname").value.trim();
             if (!nickname) {
                 alert("Inserisci un nickname!");
@@ -352,69 +483,29 @@
             }
 
             try {
-                console.log("Inizio registrazione con nickname:", nickname);
-
-                // Accedi prima con Google
-                console.log("Avvio login Google...");
-                const result = await auth.signInWithPopup(googleProvider);
-                const user = result.user;
-                console.log("Login Google completato per:", user.email);
-
-                // Controlla se l'utente esiste già
-                const userDoc = await db.collection("users").doc(user.uid).get();
-                if (userDoc.exists) {
-                    alert("Questo account Google è già registrato. Usa 'Accedi' invece.");
-                    await auth.signOut();
-                    return;
-                }
-
-                // Controlla se il nickname è già utilizzato (ora che siamo autenticati)
+                // Controlla se il nickname è già utilizzato
                 console.log("Controllo nickname duplicato...");
                 const nicknameQuery = await db.collection("users").where("nickname", "==", nickname).get();
                 if (!nicknameQuery.empty) {
                     alert("Questo nickname è già utilizzato. Scegline un altro.");
-                    await auth.signOut();
                     return;
                 }
-                console.log("Nickname disponibile");
 
                 // Salva il profilo utente
                 console.log("Salvataggio profilo utente...");
-                await db.collection("users").doc(user.uid).set({
+                await db.collection("users").doc(currentUser.uid).set({
                     nickname: nickname,
-                    email: user.email,
+                    email: currentUser.email,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 console.log("Profilo utente salvato con successo");
 
                 userNickname = nickname;
+                isRegistering = false;
                 showStartScreen();
             } catch (error) {
-                console.error("ERRORE DETTAGLIATO durante la registrazione:", {
-                    code: error.code,
-                    message: error.message,
-                    details: error
-                });
-                
-                let errorMessage = "Errore durante la registrazione: ";
-                if (error.code === 'auth/popup-closed-by-user') {
-                    errorMessage = "Registrazione annullata dall'utente.";
-                } else if (error.code === 'auth/popup-blocked') {
-                    errorMessage = "Popup bloccato dal browser. Permetti i popup per questo sito.";
-                } else if (error.code === 'auth/cancelled-popup-request') {
-                    errorMessage = "Richiesta popup annullata.";
-                } else {
-                    errorMessage += error.message || "Errore sconosciuto";
-                }
-                
-                alert(errorMessage);
-                
-                // Se c'è un errore, fai logout per sicurezza
-                try {
-                    await auth.signOut();
-                } catch (logoutError) {
-                    console.error("Errore durante il logout:", logoutError);
-                }
+                console.error("Errore nel completamento della registrazione:", error);
+                alert("Errore nel completamento della registrazione.");
             }
         }
 
@@ -422,29 +513,34 @@
         async function handleLogin() {
             try {
                 console.log("Avvio login Google...");
+                
+                // Forza il logout per permettere la selezione dell'account
+                if (currentUser) {
+                    await auth.signOut();
+                }
+                
                 const result = await auth.signInWithPopup(googleProvider);
                 console.log("Login Google completato per:", result.user.email);
                 // checkUserProfile verrà chiamato automaticamente da onAuthStateChanged
             } catch (error) {
-                console.error("ERRORE DETTAGLIATO durante l'accesso:", {
-                    code: error.code,
-                    message: error.message,
-                    details: error
-                });
-                
-                let errorMessage = "Errore durante l'accesso: ";
-                if (error.code === 'auth/popup-closed-by-user') {
-                    errorMessage = "Accesso annullato dall'utente.";
-                } else if (error.code === 'auth/popup-blocked') {
-                    errorMessage = "Popup bloccato dal browser. Permetti i popup per questo sito.";
-                } else if (error.code === 'auth/cancelled-popup-request') {
-                    errorMessage = "Richiesta popup annullata.";
-                } else {
-                    errorMessage += error.message || "Errore sconosciuto";
-                }
-                
-                alert(errorMessage);
+                console.error("ERRORE durante l'accesso:", error);
+                handleAuthError(error);
             }
+        }
+
+        // Gestione errori di autenticazione
+        function handleAuthError(error) {
+            let errorMessage = "Errore durante l'autenticazione: ";
+            if (error.code === 'auth/popup-closed-by-user') {
+                errorMessage = "Autenticazione annullata dall'utente.";
+            } else if (error.code === 'auth/popup-blocked') {
+                errorMessage = "Popup bloccato dal browser. Permetti i popup per questo sito.";
+            } else if (error.code === 'auth/cancelled-popup-request') {
+                errorMessage = "Richiesta popup annullata.";
+            } else {
+                errorMessage += error.message || "Errore sconosciuto";
+            }
+            alert(errorMessage);
         }
 
         // Controlla il profilo utente
@@ -470,6 +566,7 @@
             try {
                 await auth.signOut();
                 userNickname = "";
+                isRegistering = false;
                 showAuthScreen();
             } catch (error) {
                 console.error("Errore durante il logout:", error);
@@ -583,6 +680,8 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 console.log("Punteggio salvato con successo");
+                // Ricarica la classifica dopo aver salvato il punteggio
+                loadLeaderboard();
             } catch (error) {
                 console.error("Errore nel salvare il punteggio:", error);
             }
@@ -641,50 +740,10 @@
             }
         }
 
-        // Carica la classifica all'avvio se l'utente è autenticato
-        auth.onAuthStateChanged((user) => {
-            if (user && !authScreen.classList.contains("hidden")) {
-                loadLeaderboard();
-            }
+        // Carica la classifica all'avvio
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLeaderboard();
         });
     </script>
-<script string="
-// Sample leaderboard data
-const leaderboardData = [
-    { name: &quot;Giocatore 1&quot;, score: 100 },
-    { name: &quot;Giocatore 2&quot;, score: 95 },
-    { name: &quot;Giocatore 3&quot;, score: 90 }
-];
-
-// Function to display leaderboard
-function displayLeaderboard() {
-    const container = document.querySelector('.container');
-    const leaderboardElement = document.createElement('div');
-    leaderboardElement.className = 'leaderboard';
-    leaderboardElement.innerHTML = '&lt;h2&gt;Classifica&lt;/h2&gt;';
-
-    leaderboardData.forEach(player =&gt; {
-        leaderboardElement.innerHTML += `&lt;p&gt;${player.name}: ${player.score}&lt;/p&gt;`;
-    });
-
-    container.appendChild(leaderboardElement);
-}
-
-// Function to handle account selection
-function selectAccount() {
-    // Logic to select a different account
-    const accountSelected = confirm('Vuoi selezionare un altro account?');
-    if (accountSelected) {
-        // Redirect to account selection page or show a modal to select another account
-        // Example: window.location.href = 'select_account.html';
-        alert('Reindirizzamento alla pagina di selezione account');
-    }
-}
-
-// Display questions and leaderboard when the page loads
-window.onload = function() {
-    displayQuestions();
-    displayLeaderboard();
-};
-" type="text/javascript"></script></body>
+</body>
 </html>
