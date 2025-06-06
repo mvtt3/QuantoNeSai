@@ -1,10 +1,11 @@
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Interattivo</title>
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quiz Interattivo</title>
+<style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -146,73 +147,66 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Quiz Interattivo</h1>
-        
-        <!-- Schermata di autenticazione -->
-        <div id="auth-screen">
-            <div class="auth-buttons">
-                <button id="register-button">Registrati</button>
-                <button id="login-button" class="secondary">Accedi</button>
-            </div>
-        </div>
+<button onclick="logout()" style="position: absolute; top: 10px; right: 10px; padding: 10px; background-color: #ff0000; color: white; border: none; border-radius: 5px; cursor: pointer;">Logout</button>
 
-        <!-- Schermata di registrazione -->
-        <div id="register-screen" class="hidden">
-            <h2>Registrazione</h2>
-            <div class="nickname-setup">
-                <input type="text" id="register-nickname" placeholder="Scegli il tuo nickname">
-                <div class="warning-text">⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
-                <button id="google-register">Registrati con Google</button>
-                <button id="back-to-auth" class="secondary">Indietro</button>
-            </div>
-        </div>
-
-        <!-- Schermata di accesso -->
-        <div id="login-screen" class="hidden">
-            <h2>Accedi</h2>
-            <button id="google-login">Accedi con Google</button>
-            <button id="back-to-auth-login" class="secondary">Indietro</button>
-        </div>
-
-        <!-- Schermata principale del quiz -->
-        <div id="start-screen" class="hidden">
-            <div id="user-info"></div>
-            <button id="start-button">Inizia Quiz</button>
-            <button id="logout-button" class="secondary">Logout</button>
-        </div>
-
-        <!-- Schermata del quiz -->
-        <div id="quiz-screen" class="hidden">
-            <div class="question" id="question"></div>
-            <div class="options" id="options"></div>
-            <div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
-        </div>
-
-        <!-- Schermata finale -->
-        <div id="end-screen" class="hidden">
-            <h2>Quiz Completato!</h2>
-            <p id="score">Punteggio: <span id="score-value">0</span></p>
-            <p id="time-taken">Tempo impiegato: <span id="time-taken-value">0</span>s</p>
-            <p id="message"></p>
-            <button id="restart-button">Ricomincia Quiz</button>
-            <button id="back-to-start">Torna al Menu</button>
-        </div>
-
-        <!-- Classifica -->
-        <div id="leaderboard" class="leaderboard hidden">
-            <h2>🏆 Classifica Globale</h2>
-            <ul id="leaderboard-list"></ul>
-            <button id="reset-leaderboard-button" class="secondary">Resetta Classifica (Admin)</button>
-        </div>
-    </div>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
-    <script>
+<div class="container">
+<h1>Quiz Interattivo</h1>
+<!-- Schermata di autenticazione -->
+<div id="auth-screen">
+<div class="auth-buttons">
+<button id="register-button">Registrati</button>
+<button class="secondary" id="login-button">Accedi</button>
+</div>
+</div>
+<!-- Schermata di registrazione -->
+<div class="hidden" id="register-screen">
+<h2>Registrazione</h2>
+<div class="nickname-setup">
+<input id="register-nickname" placeholder="Scegli il tuo nickname" type="text"/>
+<div class="warning-text">⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
+<button id="google-register">Registrati con Google</button>
+<button class="secondary" id="back-to-auth">Indietro</button>
+</div>
+</div>
+<!-- Schermata di accesso -->
+<div class="hidden" id="login-screen">
+<h2>Accedi</h2>
+<button id="google-login">Accedi con Google</button>
+<button class="secondary" id="back-to-auth-login">Indietro</button>
+</div>
+<!-- Schermata principale del quiz -->
+<div class="hidden" id="start-screen">
+<div id="user-info"></div>
+<button id="start-button">Inizia Quiz</button>
+<button class="secondary" id="logout-button">Logout</button>
+</div>
+<!-- Schermata del quiz -->
+<div class="hidden" id="quiz-screen">
+<div class="question" id="question"></div>
+<div class="options" id="options"></div>
+<div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
+</div>
+<!-- Schermata finale -->
+<div class="hidden" id="end-screen">
+<h2>Quiz Completato!</h2>
+<p id="score">Punteggio: <span id="score-value">0</span></p>
+<p id="time-taken">Tempo impiegato: <span id="time-taken-value">0</span>s</p>
+<p id="message"></p>
+<button id="restart-button">Ricomincia Quiz</button>
+<button id="back-to-start">Torna al Menu</button>
+</div>
+<!-- Classifica -->
+<div class="leaderboard hidden" id="leaderboard">
+<h2>🏆 Classifica Globale</h2>
+<ul id="leaderboard-list"></ul>
+<button class="secondary" id="reset-leaderboard-button">Resetta Classifica (Admin)</button>
+</div>
+</div>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script>
         // Configurazione Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCdZbRpxIZZiUY4GgRrCza5ejxtFiDVyAc",
@@ -656,5 +650,54 @@
             }
         });
     </script>
-</body>
+<script string="
+// Sample quiz questions
+const quizQuestions = [
+    {
+        question: &quot;Qual è la capitale della Francia?&quot;,
+        options: [&quot;Londra&quot;, &quot;Berlino&quot;, &quot;Parigi&quot;, &quot;Madrid&quot;],
+        answer: &quot;Parigi&quot;
+    },
+    {
+        question: &quot;Qual è il fiume più lungo del mondo?&quot;,
+        options: [&quot;Nilo&quot;, &quot;Amazzonia&quot;, &quot;Yangtze&quot;, &quot;Mississippi&quot;],
+        answer: &quot;Amazzonia&quot;
+    },
+    {
+        question: &quot;Qual è il pianeta più grande del sistema solare?&quot;,
+        options: [&quot;Terra&quot;, &quot;Giove&quot;, &quot;Marte&quot;, &quot;Saturno&quot;],
+        answer: &quot;Giove&quot;
+    }
+];
+
+// Function to display quiz questions
+function displayQuestions() {
+    const container = document.querySelector('.container');
+    quizQuestions.forEach((q, index) =&gt; {
+        const questionElement = document.createElement('div');
+        questionElement.className = 'question';
+        questionElement.innerHTML = `&lt;h3&gt;${q.question}&lt;/h3&gt;`;
+
+        const optionsElement = document.createElement('div');
+        optionsElement.className = 'options';
+        q.options.forEach(option =&gt; {
+            optionsElement.innerHTML += `&lt;label&gt;&lt;input type=&quot;radio&quot; name=&quot;question${index}&quot; value=&quot;${option}&quot;&gt; ${option}&lt;/label&gt;&lt;br&gt;`;
+        });
+
+        container.appendChild(questionElement);
+        container.appendChild(optionsElement);
+    });
+}
+
+// Function to handle logout
+function logout() {
+    alert('Logout effettuato');
+    // Redirect to logout page or perform logout action
+    // For example, redirect to a logout page:
+    // window.location.href = 'logout.html';
+}
+
+// Display questions when the page loads
+window.onload = displayQuestions;
+" type="text/javascript"></script></body>
 </html>
