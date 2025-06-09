@@ -1,4 +1,4 @@
-	<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="utf-8"/>
@@ -188,22 +188,7 @@
             height: 32px;
             border-radius: 50%;
         }
-    
-.correct {
-    background-color: #28a745 !important;
-}
-
-.incorrect {
-    background-color: #dc3545 !important;
-}
-
-#correct-counter {
-    margin-bottom: 10px;
-    font-weight: bold;
-    color: #333;
-}
-
-</style>
+    </style>
 </head>
 <body>
 <div class="container">
@@ -263,7 +248,6 @@
 
 <!-- Schermata del quiz -->
 <div class="hidden" id="quiz-screen">
-<div id="correct-counter">Corrette: 0</div>
 <div class="question" id="question"></div>
 <div class="options" id="options"></div>
 <div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
@@ -596,33 +580,9 @@
         }
 
         // Funzioni del quiz
-        
-function showTimeoutFeedback() {
-    const question = questions[currentQuestionIndex];
-    const optionsButtons = document.querySelectorAll("#options button");
-
-    optionsButtons.forEach(button => {
-        button.disabled = true;
-        if (button.textContent === question.answer) {
-            button.classList.add("correct");
-        }
-    });
-
-    const timerText = document.getElementById("timer");
-    timerText.textContent = "⏰ Tempo scaduto!";
-
-    setTimeout(nextQuestion, 1000);
-}
-
-
-        function updateCorrectCounter() {
-            document.getElementById("correct-counter").textContent = `Corrette: ${score}`;
-        }
-
         function startQuiz() {
             currentQuestionIndex = 0;
             score = 0;
-            updateCorrectCounter();
             startTime = new Date();
             hideAllScreens();
             quizScreen.classList.remove("hidden");
@@ -646,37 +606,7 @@ function showTimeoutFeedback() {
             quizScreen.classList.add("fade-in");
         }
 
-        
-function selectOption(selectedOption) {
-    clearInterval(timer);
-    const question = questions[currentQuestionIndex];
-    const optionsButtons = document.querySelectorAll("#options button");
-
-    let correctButton = null;
-    optionsButtons.forEach(button => {
-        if (button.textContent === question.answer) {
-            correctButton = button;
-        }
-    });
-
-    optionsButtons.forEach(button => {
-        button.disabled = true;
-        if (button.textContent === selectedOption && selectedOption !== question.answer) {
-            button.classList.add("incorrect");
-        }
-        if (button.textContent === question.answer) {
-            button.classList.add("correct");
-        }
-    });
-
-    if (selectedOption === question.answer) {
-        score++;
-    }
-
-    updateCorrectCounter();
-    setTimeout(nextQuestion, 1000);
-}
-
+        function selectOption(selectedOption) {
             clearInterval(timer);
             const question = questions[currentQuestionIndex];
             if (selectedOption === question.answer) {
@@ -698,20 +628,7 @@ function selectOption(selectedOption) {
             }
         }
 
-        
-function startTimer() {
-    timeLeft = 15;
-    document.getElementById("time").textContent = timeLeft;
-    timer = setInterval(() => {
-        timeLeft--;
-        document.getElementById("time").textContent = timeLeft;
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            showTimeoutFeedback();
-        }
-    }, 1000);
-}
-
+        function startTimer() {
             timeLeft = 15;
             document.getElementById("time").textContent = timeLeft;
             timer = setInterval(() => {
@@ -881,5 +798,3 @@ function startTimer() {
     </script>
 </body>
 </html>
-
-
