@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Quiz Interattivo</title>
-<style>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Quiz Interattivo</title>
+    <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -191,88 +191,89 @@
     </style>
 </head>
 <body>
-<div class="container">
-<h1>Quiz Interattivo</h1>
-<!-- Schermata di autenticazione -->
-<div id="auth-screen">
-<div class="auth-buttons">
-<button id="register-button">Registrati</button>
-<button class="secondary" id="login-button">Accedi</button>
-</div>
-</div>
+    <div class="container">
+        <h1>Quiz Interattivo</h1>
+        <!-- Schermata di autenticazione -->
+        <div id="auth-screen">
+            <div class="auth-buttons">
+                <button id="register-button">Registrati</button>
+                <button class="secondary" id="login-button">Accedi</button>
+            </div>
+        </div>
 
-<!-- Selettore account -->
-<div class="hidden" id="account-selector">
-<h2>Seleziona Account</h2>
-<div class="account-selector">
-<p>Seleziona un account Google:</p>
-<button id="add-account-button">Aggiungi nuovo account Google</button>
-<div class="account-list" id="account-list"></div>
-<button class="secondary" id="back-from-selector">Indietro</button>
-</div>
-</div>
+        <!-- Selettore account -->
+        <div class="hidden" id="account-selector">
+            <h2>Seleziona Account</h2>
+            <div class="account-selector">
+                <p>Seleziona un account Google:</p>
+                <button id="add-account-button">Aggiungi nuovo account Google</button>
+                <div class="account-list" id="account-list"></div>
+                <button class="secondary" id="back-from-selector">Indietro</button>
+            </div>
+        </div>
 
-<!-- Schermata di registrazione -->
-<div class="hidden" id="register-screen">
-<h2>Registrazione</h2>
-<div class="nickname-setup">
-<input id="register-nickname" placeholder="Scegli il tuo nickname" type="text"/>
-<div class="warning-text">⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
-<button id="confirm-register">Conferma Registrazione</button>
-<button class="secondary" id="back-to-auth">Indietro</button>
-</div>
-</div>
+        <!-- Schermata di registrazione -->
+        <div class="hidden" id="register-screen">
+            <h2>Registrazione</h2>
+            <div class="nickname-setup">
+                <input id="register-nickname" placeholder="Scegli il tuo nickname" type="text"/>
+                <div class="warning-text">⚠️ Non potrai più cambiare il nickname dopo la registrazione</div>
+                <button id="confirm-register">Conferma Registrazione</button>
+                <button class="secondary" id="back-to-auth">Indietro</button>
+            </div>
+        </div>
 
-<!-- Schermata di accesso -->
-<div class="hidden" id="login-screen">
-<h2>Accedi</h2>
-<button id="google-login">Accedi con Google</button>
-<button class="secondary" id="back-to-auth-login">Indietro</button>
-</div>
+        <!-- Schermata di accesso -->
+        <div class="hidden" id="login-screen">
+            <h2>Accedi</h2>
+            <button id="google-login">Accedi con Google</button>
+            <button class="secondary" id="back-to-auth-login">Indietro</button>
+        </div>
 
-<!-- Schermata principale del quiz -->
-<div class="hidden" id="start-screen">
-<div id="user-info"></div>
-<button id="start-button">Inizia Quiz</button>
-<button class="secondary" id="logout-button">Logout</button>
+        <!-- Schermata principale del quiz -->
+        <div class="hidden" id="start-screen">
+            <div id="user-info"></div>
+            <button id="start-button">Inizia Quiz</button>
+            <button class="secondary" id="logout-button">Logout</button>
 
-<!-- Classifica sempre visibile nella schermata principale -->
-<div class="leaderboard" id="leaderboard">
-<h2>🏆 Classifica Globale</h2>
-<ul id="leaderboard-list">
-<li>Caricamento classifica...</li>
-</ul>
-<button class="secondary" id="reset-leaderboard-button">Resetta Classifica (Admin)</button>
-</div>
-</div>
+            <!-- Classifica sempre visibile nella schermata principale -->
+            <div class="leaderboard" id="leaderboard">
+                <h2>🏆 Classifica Globale</h2>
+                <ul id="leaderboard-list">
+                    <li>Caricamento classifica...</li>
+                </ul>
+                <button class="secondary" id="reset-leaderboard-button">Resetta Classifica (Admin)</button>
+            </div>
+        </div>
 
-<!-- Schermata del quiz -->
-<div class="hidden" id="quiz-screen">
-<div class="question" id="question"></div>
-<div class="options" id="options"></div>
-<div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
-</div>
+        <!-- Schermata del quiz -->
+        <div class="hidden" id="quiz-screen">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <div class="timer" id="timer">Tempo rimanente: <span id="time">15</span>s</div>
+        </div>
 
-<!-- Schermata finale -->
-<div class="hidden" id="end-screen">
-<h2>Quiz Completato!</h2>
-<p id="score">Punteggio: <span id="score-value">0</span></p>
-<p id="time-taken">Tempo impiegato: <span id="time-taken-value">0</span>s</p>
-<p id="message"></p>
-<button id="restart-button">Ricomincia Quiz</button>
-<button id="back-to-start">Torna al Menu</button>
-</div>
-</div>
+        <!-- Schermata finale -->
+        <div class="hidden" id="end-screen">
+            <h2>Quiz Completato!</h2>
+            <p id="score">Punteggio: <span id="score-value">0</span></p>
+            <p id="time-taken">Tempo impiegato: <span id="time-taken-value">0</span>s</p>
+            <p id="message"></p>
+            <button id="restart-button">Ricomincia Quiz</button>
+            <button id="back-to-start">Torna al Menu</button>
+        </div>
+    </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script>
         // Configurazione Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCdZbRpxIZZiUY4GgRrCza5ejxtFiDVyAc",
             authDomain: "quiz-33f1c.firebaseapp.com",
+            databaseURL: "https://quiz-33f1c-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "quiz-33f1c",
             storageBucket: "quiz-33f1c.appspot.com",
             messagingSenderId: "540883400502",
@@ -435,15 +436,14 @@
         async function handleGoogleAuth() {
             try {
                 console.log("Avvio autenticazione Google...");
-                
+
                 // Forza il logout per permettere la selezione dell'account
                 if (currentUser) {
                     await auth.signOut();
                 }
-                
+
                 const result = await auth.signInWithPopup(googleProvider);
                 console.log("Autenticazione Google completata per:", result.user.email);
-                
                 // Il resto della logica viene gestita da onAuthStateChanged
             } catch (error) {
                 console.error("ERRORE durante l'autenticazione Google:", error);
@@ -463,7 +463,7 @@
                     showLoginScreen();
                     return;
                 }
-                
+
                 // Mostra la schermata di registrazione
                 showRegisterScreen();
             } catch (error) {
@@ -513,12 +513,12 @@
         async function handleLogin() {
             try {
                 console.log("Avvio login Google...");
-                
+
                 // Forza il logout per permettere la selezione dell'account
                 if (currentUser) {
                     await auth.signOut();
                 }
-                
+
                 const result = await auth.signInWithPopup(googleProvider);
                 console.log("Login Google completato per:", result.user.email);
                 // checkUserProfile verrà chiamato automaticamente da onAuthStateChanged
@@ -594,14 +594,14 @@
             document.getElementById("question").textContent = `Domanda ${currentQuestionIndex + 1}/${questions.length}: ${question.question}`;
             const optionsElement = document.getElementById("options");
             optionsElement.innerHTML = "";
-            
+
             question.options.forEach(option => {
                 const button = document.createElement("button");
                 button.textContent = option;
                 button.addEventListener("click", () => selectOption(option));
                 optionsElement.appendChild(button);
             });
-            
+
             startTimer();
             quizScreen.classList.add("fade-in");
         }
@@ -644,14 +644,14 @@
         function endQuiz() {
             endTime = new Date();
             const timeTaken = Math.floor((endTime - startTime) / 1000);
-            
+
             hideAllScreens();
             endScreen.classList.remove("hidden");
-            
+
             document.getElementById("score-value").textContent = score;
             document.getElementById("time-taken-value").textContent = timeTaken;
             document.getElementById("message").textContent = getResultMessage(score);
-            
+
             saveScore(userNickname, score, timeTaken);
         }
 
@@ -690,10 +690,10 @@
         // Carica classifica
         async function loadLeaderboard() {
             const leaderboardList = document.getElementById("leaderboard-list");
-            
+
             try {
                 console.log("Caricamento classifica...");
-                
+
                 // Prima prova con una query più semplice
                 const snapshot = await db.collection("scores")
                     .orderBy("score", "desc")
@@ -736,29 +736,29 @@
             } catch (error) {
                 console.error("Errore dettagliato nel caricamento della classifica:", error);
                 leaderboardList.innerHTML = `<li>Errore nel caricamento: ${error.message}</li>`;
-                
+
                 // Prova con una query ancora più semplice se la prima fallisce
                 try {
                     console.log("Tentativo con query semplificata...");
                     const simpleSnapshot = await db.collection("scores").limit(10).get();
-                    
+
                     if (!simpleSnapshot.empty) {
                         leaderboardList.innerHTML = "";
                         const simpleScores = [];
-                        
+
                         simpleSnapshot.forEach((doc) => {
                             simpleScores.push(doc.data());
                         });
-                        
+
                         simpleScores.sort((a, b) => b.score - a.score);
-                        
+
                         simpleScores.forEach((data, index) => {
                             const li = document.createElement("li");
                             const medal = index < 3 ? ["🥇", "🥈", "🥉"][index] : `${index + 1}.`;
                             li.textContent = `${medal} ${data.nickname}: ${data.score}/${questions.length} punti (${data.timeTaken}s)`;
                             leaderboardList.appendChild(li);
                         });
-                        
+
                         console.log("Classifica caricata con query semplificata");
                     }
                 } catch (simpleError) {
@@ -777,11 +777,11 @@
             try {
                 const snapshot = await db.collection("scores").get();
                 const batch = db.batch();
-                
+
                 snapshot.docs.forEach((doc) => {
                     batch.delete(doc.ref);
                 });
-                
+
                 await batch.commit();
                 loadLeaderboard();
                 alert("Classifica resettata con successo!");
